@@ -10,7 +10,11 @@ router.post('/register', (req: Request, res: Response, next: NextFunction) => {
 router.post('/login', (req: Request, res: Response, next: NextFunction) => {
     authController.login(req, res).catch(next)
 });
-// router.post('/reset-password', );
-// router.post('/change-password',  );
+router.post('/forgot-password', (req: Request, res: Response, next: NextFunction) => {
+    authController.sendResetOTP(req, res).catch(next);
+});
+router.post('/reset-password', (req: Request, res: Response, next: NextFunction) => {
+    authController.resetPassword(req, res).catch(next);
+});
 
 export default router;
