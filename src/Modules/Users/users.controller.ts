@@ -112,6 +112,29 @@ const getAllUsers = async (req: Request, res: Response): Promise<void> => {
         res.status(500).json({ message: 'Failed to fetch users', error: error.message });
     }
 };
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   delete:
+ *     summary: Delete a user by ID
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: user deleted successfully
+ */
+const deleteUser = async (req: Request, res: Response) => {
+    const id = Number(req.params.id);
+
+    await prisma.user.delete({ where: { id } });
+    res.json({ message: 'User deleted successfully' });
+};
 export default {
-    getAllUsers
+    getAllUsers,
+    deleteUser
 }

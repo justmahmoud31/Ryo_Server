@@ -10,4 +10,11 @@ router.get('/', authenticate, authorizeRoles('ADMIN'), async (req: Request, res:
         next(err);
     }
 });
+router.delete('/:id', authenticate, authorizeRoles('ADMIN'), async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        await userControllers.deleteUser(req, res);
+    } catch (err) {
+        next(err);
+    }
+});
 export default router;
