@@ -20,6 +20,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
  *   post:
  *     summary: Register a new user
  *     tags: [Auth]
+ *     security: []
  *     requestBody:
  *       required: true
  *       content:
@@ -86,6 +87,7 @@ const register = async (req: Request, res: Response) => {
  *   post:
  *     summary: Log in a user
  *     tags: [Auth]
+ *     security: []
  *     requestBody:
  *       required: true
  *       content:
@@ -177,6 +179,7 @@ const changePassword = async (req: Request, res: Response) => {
  *     summary: Request password reset OTP
  *     tags:
  *       - Auth
+ *     security: []
  *     requestBody:
  *       required: true
  *       content:
@@ -273,6 +276,7 @@ const sendResetOTP = async (req: Request, res: Response) => {
  *     summary: Reset password using OTP
  *     tags:
  *       - Auth
+ *     security: []
  *     requestBody:
  *       required: true
  *       content:

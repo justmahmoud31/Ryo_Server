@@ -4,6 +4,7 @@ import { Bootstrap } from './Modules/Bootstrap';
 import { configDotenv } from 'dotenv';
 import cors from 'cors';
 import { setupSwagger } from './Config/swagger';
+import path from 'path';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -15,7 +16,7 @@ app.use(express.json());
 app.get('/', (req, res) => {
     res.send('Hello');
 });
-
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 const PORT = process.env.PORT || 3000;
 setupSwagger(app);
 async function startServer() {

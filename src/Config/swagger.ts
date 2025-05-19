@@ -8,10 +8,25 @@ const options: swaggerJSDoc.Options = {
       title: 'My API',
       version: '1.0.0',
       description: 'API documentation',
+
     },
     servers: [
       {
         url: process.env.SERVERURL, // Update your server URL
+      },
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
+    security: [
+      {
+        bearerAuth: [],
       },
     ],
   },
