@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
-
+import bcrypt from "bcrypt";
 const prisma = new PrismaClient();
 /**
  * @swagger
@@ -72,7 +72,6 @@ const prisma = new PrismaClient();
  *       500:
  *         description: Failed to fetch users
  */
-
 const getAllUsers = async (req: Request, res: Response): Promise<void> => {
     try {
         const { email, id, phoneNumber, role, page = 1, limit = 10 } = req.query;
@@ -134,7 +133,109 @@ const deleteUser = async (req: Request, res: Response) => {
     await prisma.user.delete({ where: { id } });
     res.json({ message: 'User deleted successfully' });
 };
+
+/**
+ * @swagger
+ * /api/users/admin:
+ *   post:
+ *     summary: Add a new admin user
+ *     tags:
+ *       - Users
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - phoneNumber
+ *               - firstName
+ *               - lastName
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 format: password
+ *               phoneNumber:
+ *                 type: string
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     email:
+ *                       type: string
+ *       400:
+ *         description: Email already registered
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       500:
+ *         description: Registration failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 error:
+ *                   type: string
+ */
+const addAdmin = async(req:Request,res:Response)=>{
+    try {
+        const { email, password, phoneNumber, firstName, lastName } = req.body;
+
+        const existingUser = await prisma.user.findUnique({ where: { email } });
+        if (existingUser) {
+            return res.status(400).json({ message: "Email already registered" });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const user = await prisma.user.create({
+            data: {
+                email,
+                password: hashedPassword,
+                firstName,
+                lastName,
+                role: "ADMIN",
+                phoneNumber,
+            },
+        });
+
+        return res.status(201).json({
+            message: "User registered successfully",
+            user: { id: user.id, email: user.email },
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Registration failed", error });
+    }
+}
 export default {
     getAllUsers,
-    deleteUser
+    deleteUser,
+    addAdmin
 }

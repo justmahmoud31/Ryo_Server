@@ -56,13 +56,13 @@ model Category {
 model Color {
   id       Int            @id @default(autoincrement())
   name     String
-  hex      String // Optional: for color display like "#FF0000"
+  hex      String 
   products ProductColor[]
 }
 
 model Size {
   id       Int           @id @default(autoincrement())
-  label    String // e.g., "S", "M", "L", "XL"
+  label    String 
   products ProductSize[]
 }
 
