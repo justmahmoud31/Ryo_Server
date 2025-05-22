@@ -69,7 +69,6 @@ model Size {
 model ProductColor {
   productId Int
   colorId   Int
-
   product Product @relation(fields: [productId], references: [id])
   color   Color   @relation(fields: [colorId], references: [id])
 
