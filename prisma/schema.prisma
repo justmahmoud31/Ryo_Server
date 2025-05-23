@@ -19,6 +19,7 @@ model User {
   resetOtpExpires DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+  Order           Order[]
 }
 
 model ProductImage {
@@ -44,6 +45,7 @@ model Product {
   discreption   String
   images        ProductImage[]
   cover_Image   String
+  Order         Order[]
 }
 
 model Category {
@@ -56,21 +58,21 @@ model Category {
 model Color {
   id       Int            @id @default(autoincrement())
   name     String
-  hex      String 
+  hex      String
   products ProductColor[]
 }
 
 model Size {
   id       Int           @id @default(autoincrement())
-  label    String 
+  label    String
   products ProductSize[]
 }
 
 model ProductColor {
   productId Int
   colorId   Int
-  product Product @relation(fields: [productId], references: [id])
-  color   Color   @relation(fields: [colorId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+  color     Color   @relation(fields: [colorId], references: [id])
 
   @@id([productId, colorId])
 }
@@ -83,6 +85,23 @@ model ProductSize {
   size    Size    @relation(fields: [sizeId], references: [id])
 
   @@id([productId, sizeId])
+}
+
+model Order {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  userId    Int
+  user      User    @relation(fields: [userId], references: [id])
+  status    status  @default(PENDING)
+
+  @@map("order") // 👈 lowercase to match Postgres table
+}
+
+enum status {
+  PENDING
+  DELIVERED
+  CANCELED
 }
 
 enum Role {

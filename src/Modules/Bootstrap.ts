@@ -4,7 +4,8 @@ import userRouter from './Users/user.routes';
 import categoryRouter from './Category/category.routes';
 import colorRouter from './Products/Product-Colors/product-color.routes';
 import sizesRouter from './Products/Product-Sizes/product-size.routes'
-import productRouter from './Products/product.routes'
+import productRouter from './Products/product.routes';
+import orderRouter from './Order/order.routes';
 export const Bootstrap = (app: Express): void => {
     app.use('/api/auth', authRouter);
     app.use('/api/users', userRouter);
@@ -12,4 +13,5 @@ export const Bootstrap = (app: Express): void => {
     app.use('/api/colors', colorRouter);
     app.use('/api/sizes', sizesRouter);
     app.use('/api/products', productRouter);
+    app.use('/api/orders', orderRouter)
 }
