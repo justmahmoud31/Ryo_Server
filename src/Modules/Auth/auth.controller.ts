@@ -237,11 +237,6 @@ const sendResetOTP = async (req: Request, res: Response) => {
   <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
     <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
       <tr>
-        <td align="center" style="padding: 20px 0; background-color: #003366;">
-          <img src="https://yourcompany.com/logo.png" alt="Company Logo" style="max-height: 60px;" />
-        </td>
-      </tr>
-      <tr>
         <td style="padding: 30px;">
           <h2 style="color: #333;">Reset Your Password</h2>
           <p style="font-size: 16px; color: #555;">You have requested to reset your password. Use the OTP below to proceed:</p>
@@ -253,7 +248,7 @@ const sendResetOTP = async (req: Request, res: Response) => {
       <tr>
         <td style="background-color: #f4f4f4; padding: 20px; text-align: center; font-size: 12px; color: #999;">
           &copy; ${new Date().getFullYear()} Your Company. All rights reserved.<br/>
-          <a href="https://yourcompany.com" style="color: #999; text-decoration: none;">www.yourcompany.com</a>
+          <a href="https://ryo-egypt.com" style="color: #999; text-decoration: none;">www.ryo-egypt.com</a>
         </td>
       </tr>
     </table>
