@@ -3,7 +3,8 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { PrismaClient, Role } from "@prisma/client";
 import { sendEmail } from "../../Config/mailService";
-
+// import logo from '../../Public/ryo.jpg';
+const LOGO_URL = 'https://ryo-egypt.com/'; // Update with actual public URL
 const prisma = new PrismaClient();
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
@@ -237,8 +238,8 @@ const sendResetOTP = async (req: Request, res: Response) => {
   <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
     <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); overflow: hidden;">
       <tr>
-        <td style="padding: 30px; text-align: center;">
-          <img src="https://yourdomain.com/path-to-logo.png" alt="Ryo Egypt Logo" width="120" style="margin-bottom: 20px;" />
+          <img src=${LOGO_URL} alt="Ryo Egypt Logo" width="120" style="margin-bottom: 20px;" />
+
           <h2 style="color: #2c3e50; margin-bottom: 10px;">Password Reset Request</h2>
           <p style="font-size: 16px; color: #555; margin-bottom: 20px;">
             We received a request to reset your password. Please use the one-time password (OTP) below to proceed:
