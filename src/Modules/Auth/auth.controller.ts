@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import { PrismaClient, Role } from "@prisma/client";
 import { sendEmail } from "../../Config/mailService";
 // import logo from '../../Public/ryo.jpg';
-const LOGO_URL = 'https://ryo-egypt.com/'; // Update with actual public URL
+const LOGO_URL = 'https://postimg.cc/vg2hgxWL'; // Update with actual public URL
 const prisma = new PrismaClient();
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
