@@ -234,20 +234,27 @@ const sendResetOTP = async (req: Request, res: Response) => {
     <meta charset="UTF-8" />
     <title>Password Reset OTP</title>
   </head>
-  <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
-    <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+  <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); overflow: hidden;">
       <tr>
-        <td style="padding: 30px;">
-          <h2 style="color: #333;">Reset Your Password</h2>
-          <p style="font-size: 16px; color: #555;">You have requested to reset your password. Use the OTP below to proceed:</p>
-          <p style="font-size: 24px; font-weight: bold; color: #003366; text-align: center; margin: 20px 0;">${otp}</p>
-          <p style="font-size: 14px; color: #999;">This OTP will expire in 15 minutes.</p>
-          <p style="font-size: 14px; color: #999;">If you did not request this, you can safely ignore this email.</p>
+        <td style="padding: 30px; text-align: center;">
+          <img src="https://yourdomain.com/path-to-logo.png" alt="Ryo Egypt Logo" width="120" style="margin-bottom: 20px;" />
+          <h2 style="color: #2c3e50; margin-bottom: 10px;">Password Reset Request</h2>
+          <p style="font-size: 16px; color: #555; margin-bottom: 20px;">
+            We received a request to reset your password. Please use the one-time password (OTP) below to proceed:
+          </p>
+          <p style="font-size: 28px; font-weight: bold; color: #2980b9; letter-spacing: 3px; margin: 0 0 20px 0;">${otp}</p>
+          <p style="font-size: 14px; color: #999; margin-bottom: 10px;">
+            This OTP will expire in 15 minutes.
+          </p>
+          <p style="font-size: 14px; color: #999;">
+            If you did not initiate this request, please disregard this email.
+          </p>
         </td>
       </tr>
       <tr>
-        <td style="background-color: #f4f4f4; padding: 20px; text-align: center; font-size: 12px; color: #999;">
-          &copy; ${new Date().getFullYear()} Your Company. All rights reserved.<br/>
+        <td style="background-color: #f1f1f1; padding: 15px; text-align: center; font-size: 12px; color: #999;">
+          &copy; ${new Date().getFullYear()} Ryo Egypt. All rights reserved.<br />
           <a href="https://ryo-egypt.com" style="color: #999; text-decoration: none;">www.ryo-egypt.com</a>
         </td>
       </tr>
@@ -255,6 +262,7 @@ const sendResetOTP = async (req: Request, res: Response) => {
   </body>
   </html>
 `;
+
 
     await sendEmail(email, "Reset Password OTP", html);
 
