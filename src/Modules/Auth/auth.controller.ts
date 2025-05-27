@@ -229,40 +229,118 @@ const sendResetOTP = async (req: Request, res: Response) => {
     });
 
     const html = `
-  <!DOCTYPE html>
-  <html lang="en">
-  <head>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
     <meta charset="UTF-8" />
     <title>Password Reset OTP</title>
-  </head>
-  <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
-    <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); overflow: hidden;">
-      <tr>
-          <img src=${LOGO_URL} alt="Ryo Egypt Logo" width="120" style="margin-bottom: 20px;" />
-
-          <h2 style="color: #2c3e50; margin-bottom: 10px;">Password Reset Request</h2>
-          <p style="font-size: 16px; color: #555; margin-bottom: 20px;">
-            We received a request to reset your password. Please use the one-time password (OTP) below to proceed:
-          </p>
-          <p style="font-size: 28px; font-weight: bold; color: #2980b9; letter-spacing: 3px; margin: 0 0 20px 0;">${otp}</p>
-          <p style="font-size: 14px; color: #999; margin-bottom: 10px;">
-            This OTP will expire in 15 minutes.
-          </p>
-          <p style="font-size: 14px; color: #999;">
-            If you did not initiate this request, please disregard this email.
-          </p>
-        </td>
-      </tr>
-      <tr>
-        <td style="background-color: #f1f1f1; padding: 15px; text-align: center; font-size: 12px; color: #999;">
-          &copy; ${new Date().getFullYear()} Ryo Egypt. All rights reserved.<br />
-          <a href="https://ryo-egypt.com" style="color: #999; text-decoration: none;">www.ryo-egypt.com</a>
-        </td>
-      </tr>
-    </table>
-  </body>
-  </html>
-`;
+    <style>
+      body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+      padding: 40px 0;
+      }
+      .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+      overflow: hidden;
+      border: 1px solid #e3e3e3;
+      }
+      .header {
+      background: linear-gradient(90deg, #2980b9 0%, #6dd5fa 100%);
+      padding: 32px 0 16px 0;
+      text-align: center;
+      }
+      .header img {
+      width: 100px;
+      border-radius: 50%;
+      box-shadow: 0 2px 8px rgba(41,128,185,0.15);
+      margin-bottom: 12px;
+      }
+      .header h2 {
+      color: #fff;
+      margin: 0;
+      font-size: 2rem;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 8px rgba(41,128,185,0.15);
+      }
+      .content {
+      padding: 32px 32px 24px 32px;
+      text-align: center;
+      }
+      .content p {
+      color: #444;
+      font-size: 1.1rem;
+      margin-bottom: 18px;
+      }
+      .otp {
+      display: inline-block;
+      background: linear-gradient(90deg, #6dd5fa 0%, #2980b9 100%);
+      color: #fff;
+      font-size: 2.2rem;
+      font-weight: bold;
+      letter-spacing: 8px;
+      padding: 16px 32px;
+      border-radius: 12px;
+      margin: 18px 0 18px 0;
+      box-shadow: 0 4px 16px rgba(41,128,185,0.12);
+      border: 2px dashed #fff;
+      transition: background 0.3s;
+      }
+      .content .expire {
+      color: #888;
+      font-size: 0.98rem;
+      margin-bottom: 8px;
+      }
+      .content .note {
+      color: #b2bec3;
+      font-size: 0.95rem;
+      }
+      .footer {
+      background: #f1f1f1;
+      padding: 18px;
+      text-align: center;
+      font-size: 0.95rem;
+      color: #999;
+      border-top: 1px solid #e3e3e3;
+      }
+      .footer a {
+      color: #2980b9;
+      text-decoration: none;
+      font-weight: 500;
+      }
+    </style>
+    </head>
+    <body>
+    <div class="container">
+      <div class="header">
+      <img src="${LOGO_URL}" alt="Ryo Egypt Logo" />
+      <h2>Password Reset Request</h2>
+      </div>
+      <div class="content">
+      <p>
+        We received a request to reset your password.<br>
+        Please use the one-time password (OTP) below to proceed:
+      </p>
+      <div class="otp">${otp}</div>
+      <div class="expire">
+        This OTP will expire in <b>15 minutes</b>.
+      </div>
+      <div class="note">
+        If you did not initiate this request, please disregard this email.
+      </div>
+      </div>
+      <div class="footer">
+      &copy; ${new Date().getFullYear()} Ryo Egypt. All rights reserved.<br />
+      <a href="https://ryo-egypt.com">www.ryo-egypt.com</a>
+      </div>
+    </div>
+    </body>
+    </html>
+  `;
 
 
     await sendEmail(email, "Reset Password OTP", html);
