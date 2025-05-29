@@ -7,6 +7,8 @@ const prisma = new PrismaClient();
  * /api/orders:
  *   post:
  *     summary: Create a new order
+ *     tags:
+ *       - Orders
  *     requestBody:
  *       required: true
  *       content:
@@ -39,6 +41,8 @@ export const createOrder = async (req: Request, res: Response) => {
  * /api/orders:
  *   get:
  *     summary: Get all orders with filters
+ *     tags:
+ *       - Orders
  *     parameters:
  *       - in: query
  *         name: userId
@@ -77,6 +81,8 @@ export const getOrders = async (req: Request, res: Response) => {
  * /api/orders/{id}:
  *   put:
  *     summary: Update an order
+ *     tags:
+ *       - Orders 
  *     parameters:
  *       - in: path
  *         name: id
@@ -116,6 +122,8 @@ export const updateOrder = async (req: Request, res: Response) => {
  * /api/orders/{id}:
  *   delete:
  *     summary: Delete an order
+ *     tags:
+ *       - Orders
  *     parameters:
  *       - in: path
  *         name: id
