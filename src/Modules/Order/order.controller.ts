@@ -135,3 +135,63 @@ export const deleteOrder = async (req: Request, res: Response) => {
         res.status(400).json({ error: error });
     }
 };
+/**
+ * @swagger
+ * /api/orders/me:
+ *   get:
+ *     summary: Get orders for the currently authenticated user
+ *     tags:
+ *       - Orders
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of user's orders
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   productId:
+ *                     type: integer
+ *                   userId:
+ *                     type: integer
+ *                   status:
+ *                     type: string
+ *                     enum: [PENDING, DELIVERED, CANCELED]
+ *                   product:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       name:
+ *                         type: string
+ *                       price:
+ *                         type: number
+ *                         format: float
+ *                       cover_Image:
+ *                         type: string
+ *       401:
+ *         description: Unauthorized - Missing or invalid token
+ *       500:
+ *         description: Internal server error
+ */
+
+export const getUsersOrder = async (req: Request, res: Response) => {
+    const userId = (req as any).user?.id;
+    try {
+        const orders = await prisma.order.findMany({
+            where: { userId: Number(userId) },
+            include: {
+                product: true,
+            },
+        });
+        res.status(200).json(orders);
+    } catch (error) {
+        res.status(500).json({ error: error });
+    }
+}
