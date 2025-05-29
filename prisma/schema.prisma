@@ -95,7 +95,7 @@ model Order {
   user      User    @relation(fields: [userId], references: [id])
   status    status  @default(PENDING)
 
-  @@map("order") // 👈 lowercase to match Postgres table
+
 }
 
 enum status {
