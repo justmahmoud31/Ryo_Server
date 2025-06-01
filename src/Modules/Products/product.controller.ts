@@ -95,7 +95,7 @@ export const createProduct = async (req: Request, res: Response) => {
         if (req.files && !Array.isArray(req.files) && typeof req.files === 'object' && 'images' in req.files) {
             uploadedImages = (req.files as { [fieldname: string]: Express.Multer.File[] })['images'] || [];
         }
-        const imageUrls = uploadedImages.map(file => `/uploads/products/${file.filename}`);
+        const imageUrls = uploadedImages.map(file => `/uploads/${file.filename}`);
 
         // Handle cover image
         let coverImageFile: Express.Multer.File | undefined;
@@ -107,7 +107,7 @@ export const createProduct = async (req: Request, res: Response) => {
         ) {
             coverImageFile = (req.files as { [fieldname: string]: Express.Multer.File[] })['cover_Image']?.[0];
         }
-        const coverImageUrl = coverImageFile ? `/uploads/products/${coverImageFile.filename}` : '';
+        const coverImageUrl = coverImageFile ? `/uploads/${coverImageFile.filename}` : '';
 
         const product = await prisma.product.create({
             data: {
