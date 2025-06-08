@@ -10,7 +10,10 @@ import { authenticate, authorizeRoles } from '../../Middlewares/auth';
 
 const router = express.Router();
 
-router.post('/', authenticate, createOrder);
+router.post('/', authenticate, (req, res, next) => {
+    createOrder(req, res).catch(next);
+}
+);
 router.get('/', authenticate, authorizeRoles('ADMIN'), getOrders);
 router.get('/me', authenticate, getUsersOrder);
 router.put('/:id', authenticate, authorizeRoles('ADMIN'), updateOrder);

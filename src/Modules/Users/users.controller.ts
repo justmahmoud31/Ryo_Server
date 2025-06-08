@@ -204,7 +204,7 @@ const deleteUser = async (req: Request, res: Response) => {
  *                 error:
  *                   type: string
  */
-const addAdmin = async(req:Request,res:Response)=>{
+const addAdmin = async (req: Request, res: Response) => {
     try {
         const { email, password, phoneNumber, firstName, lastName } = req.body;
 
@@ -234,8 +234,100 @@ const addAdmin = async(req:Request,res:Response)=>{
         return res.status(500).json({ message: "Registration failed", error });
     }
 }
+/**
+ * @swagger
+ * /api/users/me:
+ *   get:
+ *     summary: Get current user data
+ *     description: Returns the authenticated user's profile information.
+ *     tags:
+ *       - Users
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   format: uuid
+ *                   example: "123e4567-e89b-12d3-a456-426614174000"
+ *                 email:
+ *                   type: string
+ *                   example: "user@example.com"
+ *                 firstName:
+ *                   type: string
+ *                   example: "John"
+ *                 lastName:
+ *                   type: string
+ *                   example: "Doe"
+ *                 phoneNumber:
+ *                   type: string
+ *                   example: "+1234567890"
+ *                 role:
+ *                   type: string
+ *                   example: "user"
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                   example: "2024-01-01T12:00:00Z"
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "User not found"
+ *       500:
+ *         description: Failed to fetch user data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Failed to fetch user data"
+ *                 error:
+ *                   type: object
+ */
+const getMyData = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user?.id;
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                phoneNumber: true,
+                role: true,
+                createdAt: true,
+            },
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json(user);
+    } catch (error) {
+        console.error('Error fetching user data:', error);
+        res.status(500).json({ message: 'Failed to fetch user data', error: error });
+    }
+}
 export default {
     getAllUsers,
     deleteUser,
-    addAdmin
+    addAdmin,
+    getMyData
 }

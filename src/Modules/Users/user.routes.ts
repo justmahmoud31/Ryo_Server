@@ -13,6 +13,13 @@ router.get('/', authenticate, authorizeRoles('ADMIN'), async (req: Request, res:
 router.post('/admin', authenticate, authorizeRoles('ADMIN'), async (req: Request, res: Response, next: NextFunction) => {
     await userControllers.addAdmin(req, res);
 })
+router.get('/me', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        await userControllers.getMyData(req, res);
+    } catch (err) {
+        next(err);
+    }
+});
 router.delete('/:id', authenticate, authorizeRoles('ADMIN'), async (req: Request, res: Response, next: NextFunction) => {
     try {
         await userControllers.deleteUser(req, res);

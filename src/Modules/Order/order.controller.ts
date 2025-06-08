@@ -15,27 +15,75 @@ const prisma = new PrismaClient();
  *         application/json:
  *           schema:
  *             type: object
- *             required: [userId, productId]
+ *             required: [productId, quantity, total, address, phone]
  *             properties:
  *               productId:
  *                 type: integer
+ *               quantity:
+ *                 type: integer
+ *               address:
+ *                 type: string
+ *               phone:
+ *                 type: string
  *     responses:
  *       201:
- *         description: Order created
+ *         description: Order created successfully
+ *       400:
+ *         description: Invalid input or creation failed
  */
 
 export const createOrder = async (req: Request, res: Response) => {
-    const userId = (req as any).user?.id;
-    const { productId } = req.body;
-    try {
-        const order = await prisma.order.create({
-            data: { userId, productId },
-        });
-        res.status(201).json(order);
-    } catch (error) {
-        res.status(400).json({ error: error });
+  const userId = (req as any).user?.id;
+  const { productId, quantity,  address, phone } = req.body;
+
+  if (!productId || !quantity  || !address || !phone) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  try {
+    // Check if product exists and has enough stock
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+    });
+
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
     }
+
+    if (product.stock < quantity) {
+      return res.status(400).json({ error: 'Insufficient stock' });
+    }
+    const total = product.price * quantity;
+    // Use a transaction to ensure both operations succeed/fail together
+    const [order, updatedProduct] = await prisma.$transaction([
+      prisma.order.create({
+        data: {
+          userId,
+          productId,
+          quantity,
+          total,
+          address,
+          phone,
+        },
+      }),
+      prisma.product.update({
+        where: { id: productId },
+        data: {
+          stock: {
+            decrement: quantity,
+          },
+        },
+      }),
+    ]);
+
+    res.status(201).json(order);
+  } catch (error) {
+    console.error('Order creation error:', error);
+    res.status(400).json({ error: 'Failed to create order' });
+  }
 };
+
+
 /**
  * @swagger
  * /api/orders:
