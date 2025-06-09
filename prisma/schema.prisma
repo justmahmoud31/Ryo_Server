@@ -46,6 +46,7 @@ model Product {
   images        ProductImage[]
   cover_Image   String
   Order         Order[]
+  isDeleted     Boolean @default(false)
 }
 
 model Category {

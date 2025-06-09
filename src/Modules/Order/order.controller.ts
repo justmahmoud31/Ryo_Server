@@ -193,19 +193,41 @@ export const updateOrder = async (req: Request, res: Response) => {
  *           type: integer
  *     responses:
  *       204:
- *         description: Order deleted
+ *         description: Order deleted successfully
+ *       403:
+ *         description: Forbidden - Not allowed to delete this order
+ *       404:
+ *         description: Order not found
  */
 export const deleteOrder = async (req: Request, res: Response) => {
     const { id } = req.params;
+    const user = (req as any).user;
+
     try {
-        await prisma.order.delete({ where: { id: Number(id) } });
-        res.status(204).json({
-            message: "Order deleted successfully"
+        const order = await prisma.order.findUnique({
+            where: { id: Number(id) },
+        });
+
+        if (!order) {
+            return res.status(404).json({ error: "Order not found" });
+        }
+
+        if (user.role !== "admin" && order.userId !== user.id) {
+            return res.status(403).json({ error: "You are not allowed to delete this order" });
+        }
+
+        await prisma.order.delete({
+            where: { id: Number(id) },
+        });
+
+        return res.status(201).json({
+            message: "Order deleted successfully",
         });
     } catch (error) {
-        res.status(400).json({ error: error });
+        return res.status(400).json({ error: error instanceof Error ? error.message : "Something went wrong" });
     }
 };
+
 /**
  * @swagger
  * /api/orders/me:

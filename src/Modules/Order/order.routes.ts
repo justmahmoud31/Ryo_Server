@@ -17,6 +17,8 @@ router.post('/', authenticate, (req, res, next) => {
 router.get('/', authenticate, authorizeRoles('ADMIN'), getOrders);
 router.get('/me', authenticate, getUsersOrder);
 router.put('/:id', authenticate, authorizeRoles('ADMIN'), updateOrder);
-router.delete('/:id', authenticate, authorizeRoles('ADMIN'), deleteOrder);
+router.delete('/:id', authenticate, (req,res,next)=>{
+    deleteOrder(req, res).catch(next);
+});
 
 export default router;

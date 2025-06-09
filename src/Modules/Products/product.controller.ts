@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { Request, Response } from "express";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -65,79 +65,90 @@ const prisma = new PrismaClient();
  *         description: Internal server error
  */
 export const createProduct = async (req: Request, res: Response) => {
-    try {
-        const {
-            name,
-            categoryId,
-            price,
-            stock,
-            target_gender,
-            Material,
-            discreption,
-        } = req.body;
+  try {
+    const {
+      name,
+      categoryId,
+      price,
+      stock,
+      target_gender,
+      Material,
+      discreption,
+    } = req.body;
 
-        const parsedCategoryId = parseInt(categoryId);
-        const parsedPrice = parseFloat(price);
-        const parsedStock = parseInt(stock);
+    const parsedCategoryId = parseInt(categoryId);
+    const parsedPrice = parseFloat(price);
+    const parsedStock = parseInt(stock);
 
-        const colors = (req.body.colors || '')
-            .split(',')
-            .map((id: string) => parseInt(id))
-            .filter((id: number) => !isNaN(id));
+    const colors = (req.body.colors || "")
+      .split(",")
+      .map((id: string) => parseInt(id))
+      .filter((id: number) => !isNaN(id));
 
-        const sizes = (req.body.sizes || '')
-            .split(',')
-            .map((id: string) => parseInt(id))
-            .filter((id: number) => !isNaN(id));
+    const sizes = (req.body.sizes || "")
+      .split(",")
+      .map((id: string) => parseInt(id))
+      .filter((id: number) => !isNaN(id));
 
-        // Handle uploaded images
-        let uploadedImages: Express.Multer.File[] = [];
-        if (req.files && !Array.isArray(req.files) && typeof req.files === 'object' && 'images' in req.files) {
-            uploadedImages = (req.files as { [fieldname: string]: Express.Multer.File[] })['images'] || [];
-        }
-        const imageUrls = uploadedImages.map(file => `/uploads/${file.filename}`);
-
-        // Handle cover image
-        let coverImageFile: Express.Multer.File | undefined;
-        if (
-            req.files &&
-            !Array.isArray(req.files) &&
-            typeof req.files === 'object' &&
-            'cover_Image' in req.files
-        ) {
-            coverImageFile = (req.files as { [fieldname: string]: Express.Multer.File[] })['cover_Image']?.[0];
-        }
-        const coverImageUrl = coverImageFile ? `/uploads/${coverImageFile.filename}` : '';
-
-        const product = await prisma.product.create({
-            data: {
-                name,
-                categoryId: parsedCategoryId,
-                price: parsedPrice,
-                stock: parsedStock,
-                target_gender,
-                Material,
-                discreption,
-                cover_Image: coverImageUrl,
-                colors: {
-                    create: colors.map((colorId: number) => ({ colorId })),
-                },
-                sizes: {
-                    create: sizes.map((sizeId: number) => ({ sizeId })),
-                },
-                images: {
-                    create: imageUrls.map((url: string) => ({ url })),
-                }
-            },
-            include: { colors: true, sizes: true, images: true }
-        });
-
-        res.status(201).json(product);
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
+    // Handle uploaded images
+    let uploadedImages: Express.Multer.File[] = [];
+    if (
+      req.files &&
+      !Array.isArray(req.files) &&
+      typeof req.files === "object" &&
+      "images" in req.files
+    ) {
+      uploadedImages =
+        (req.files as { [fieldname: string]: Express.Multer.File[] })[
+          "images"
+        ] || [];
     }
-};
+    const imageUrls = uploadedImages.map((file) => `/uploads/${file.filename}`);
 
+    // Handle cover image
+    let coverImageFile: Express.Multer.File | undefined;
+    if (
+      req.files &&
+      !Array.isArray(req.files) &&
+      typeof req.files === "object" &&
+      "cover_Image" in req.files
+    ) {
+      coverImageFile = (
+        req.files as { [fieldname: string]: Express.Multer.File[] }
+      )["cover_Image"]?.[0];
+    }
+    const coverImageUrl = coverImageFile
+      ? `/uploads/${coverImageFile.filename}`
+      : "";
+
+    const product = await prisma.product.create({
+      data: {
+        name,
+        categoryId: parsedCategoryId,
+        price: parsedPrice,
+        stock: parsedStock,
+        target_gender,
+        Material,
+        discreption,
+        cover_Image: coverImageUrl,
+        colors: {
+          create: colors.map((colorId: number) => ({ colorId })),
+        },
+        sizes: {
+          create: sizes.map((sizeId: number) => ({ sizeId })),
+        },
+        images: {
+          create: imageUrls.map((url: string) => ({ url })),
+        },
+      },
+      include: { colors: true, sizes: true, images: true },
+    });
+
+    res.status(201).json(product);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 /**
  * @swagger
@@ -169,40 +180,46 @@ export const createProduct = async (req: Request, res: Response) => {
  *         description: Internal server error
  */
 export const getProducts = async (req: Request, res: Response) => {
-    try {
-        const { name, categoryId, page = 1, limit = 10 } = req.query;
-        const filters: any = {};
+  try {
+    const { name, categoryId, page = 1, limit = 10 } = req.query;
+    const filters: any = {
+      isDeleted: false,
+    };
 
-        if (name) filters.name = { contains: name as string, mode: 'insensitive' };
-        if (categoryId) filters.categoryId = parseInt(categoryId as string);
-
-        const products = await prisma.product.findMany({
-            where: filters,
-            include: {
-                colors: {
-                    include: {
-                        color: true, // Include actual color data
-                    },
-                },
-                sizes: {
-                    include: {
-                        size: true, // Include actual size data
-                    },
-                },
-                images: true,
-            },
-            skip: (Number(page) - 1) * Number(limit),
-            take: Number(limit),
-        });
-
-
-        res.json({
-            message: "Products Retrived Succeffuly",
-            data: products
-        });
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
+    if (name) {
+      filters.name = { contains: name as string, mode: "insensitive" };
     }
+
+    if (categoryId) {
+      filters.categoryId = parseInt(categoryId as string);
+    }
+
+    const products = await prisma.product.findMany({
+      where: filters,
+      include: {
+        colors: {
+          include: {
+            color: true,
+          },
+        },
+        sizes: {
+          include: {
+            size: true,
+          },
+        },
+        images: true,
+      },
+      skip: (Number(page) - 1) * Number(limit),
+      take: Number(limit),
+    });
+
+    res.json({
+      message: "Products retrieved successfully",
+      data: products,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 };
 
 /**
@@ -226,13 +243,17 @@ export const getProducts = async (req: Request, res: Response) => {
  *         description: Internal server error
  */
 export const deleteProduct = async (req: Request, res: Response) => {
-    try {
-        const id = parseInt(req.params.id);
-        await prisma.product.delete({ where: { id } });
-        res.json({ message: 'Product deleted' });
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
-    }
+  try {
+    const id = parseInt(req.params.id);
+    await prisma.product.update({
+      where: { id },
+      data: { isDeleted: true },
+    });
+
+    res.json({ message: "Product deleted" });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 };
 
 /**
@@ -275,14 +296,14 @@ export const deleteProduct = async (req: Request, res: Response) => {
  *         description: Internal server error
  */
 export const updateProduct = async (req: Request, res: Response) => {
-    try {
-        const id = parseInt(req.params.id);
-        const updatedProduct = await prisma.product.update({
-            where: { id },
-            data: req.body
-        });
-        res.json(updatedProduct);
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
-    }
+  try {
+    const id = parseInt(req.params.id);
+    const updatedProduct = await prisma.product.update({
+      where: { id },
+      data: req.body,
+    });
+    res.json(updatedProduct);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 };
