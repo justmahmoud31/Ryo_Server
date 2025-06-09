@@ -106,29 +106,39 @@ export const createOrder = async (req: Request, res: Response) => {
  */
 
 export const getOrders = async (req: Request, res: Response) => {
-    const userId = (req as any).user?.id;
-    const { productId } = req.query;
-    try {
-        const orders = await prisma.order.findMany({
-            where: {
-                userId: userId ? Number(userId) : undefined,
-                productId: productId ? Number(productId) : undefined,
-            },
-            include: {
-                user: true,
-                product: true,
-            },
-        });
-        res.status(200).json(orders);
-    } catch (error) {
-        res.status(500).json({ error: error });
-    }
+  const { productId, userId } = req.query;
+
+  try {
+    const orders = await prisma.order.findMany({
+      where: {
+        ...(productId && { productId: Number(productId) }),
+        ...(userId && { userId: Number(userId) }),
+      },
+      include: {
+        user: true,
+        product: {
+          include: {
+            images: true, // optional: include images if you want
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Something went wrong while fetching orders." });
+  }
 };
+
 /**
  * @swagger
  * /api/orders/{id}:
  *   put:
- *     summary: Update an order
+ *     summary: Update an order status
  *     tags:
  *       - Orders 
  *     parameters:
@@ -144,8 +154,9 @@ export const getOrders = async (req: Request, res: Response) => {
  *           schema:
  *             type: object
  *             properties:
- *               productId:
- *                 type: integer
+ *               status:
+ *                 type: string
+ *                 enum: [PENDING, DELIVERED, CANCELED]
  *     responses:
  *       200:
  *         description: Order updated
@@ -153,18 +164,20 @@ export const getOrders = async (req: Request, res: Response) => {
 
 export const updateOrder = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const userId = (req as any).user?.id;
-    const { productId } = req.body;
+    const { status } = req.body;
+
     try {
-        const updated = await prisma.order.update({
+        const updatedOrder = await prisma.order.update({
             where: { id: Number(id) },
-            data: { userId, productId },
+            data: { status },
         });
-        res.status(200).json(updated);
+
+        res.status(200).json(updatedOrder);
     } catch (error) {
-        res.status(400).json({ error: error });
+        res.status(400).json({ error: error || 'Something went wrong' });
     }
 };
+
 /**
  * @swagger
  * /api/orders/{id}:
