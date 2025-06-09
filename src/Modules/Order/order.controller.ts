@@ -199,7 +199,9 @@ export const deleteOrder = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {
         await prisma.order.delete({ where: { id: Number(id) } });
-        res.status(204).send();
+        res.status(204).json({
+            message: "Order deleted successfully"
+        });
     } catch (error) {
         res.status(400).json({ error: error });
     }
