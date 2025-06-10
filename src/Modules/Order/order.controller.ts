@@ -247,7 +247,7 @@ export const deleteOrder = async (req: Request, res: Response) => {
             return res.status(404).json({ error: "Order not found" });
         }
 
-        if (user.role !== "admin" && order.userId !== user.id) {
+        if (user.role !== "ADMIN" && order.userId !== user.id) {
             return res.status(403).json({ error: "You are not allowed to delete this order" });
         }
 
