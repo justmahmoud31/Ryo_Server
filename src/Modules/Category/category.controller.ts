@@ -54,23 +54,29 @@ const addCategory = async (req: Request, res: Response) => {
     }
 }
 const updateCategory = async (req: Request, res: Response) => {
-    try {
-        const id = Number(req.params.id);
-        const { name } = req.body;
+  try {
+    const id = Number(req.params.id);
+    const { name } = req.body;
+    const file = req.file;
 
-        const data: any = { name };
-       
-
-        const category = await prisma.category.update({
-            where: { id },
-            data,
-        });
-
-        res.json(category);
-    } catch (error) {
-        res.status(500).json({ message: 'Failed to update category', error });
+    const data: any = {};
+    if (name) data.name = name;
+    if (file) {
+      data.image = `/uploads/${file.filename}`; // or use req.file.path if needed
     }
+
+    const category = await prisma.category.update({
+      where: { id },
+      data,
+    });
+
+    res.json(category);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update category', error });
+  }
 };
+
+
 const getCategories = async (req: Request, res: Response) => {
     const { id, name } = req.query;
 

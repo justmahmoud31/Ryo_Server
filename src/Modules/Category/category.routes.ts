@@ -48,16 +48,20 @@ router.post('/', authenticate, authorizeRoles('ADMIN'), upload.single('image'), 
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
  *               name:
  *                 type: string
+ *               image:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       200:
  *         description: Category updated successfully
  */
+
 router.put('/:id', authenticate, authorizeRoles('ADMIN'), upload.single('image'), categoryController.updateCategory);
 
 router.delete('/:id', authenticate, authorizeRoles('ADMIN'), categoryController.deleteCategory);
