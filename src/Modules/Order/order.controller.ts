@@ -15,7 +15,7 @@ const prisma = new PrismaClient();
  *         application/json:
  *           schema:
  *             type: object
- *             required: [productId, quantity, total, address, phone]
+ *             required: [productId, quantity, total, address, phone, colorId, sizeId]
  *             properties:
  *               productId:
  *                 type: integer
@@ -25,6 +25,10 @@ const prisma = new PrismaClient();
  *                 type: string
  *               phone:
  *                 type: string
+ *               colorId:
+ *                 type: integer
+ *               sizeId:
+ *                 type: integer
  *     responses:
  *       201:
  *         description: Order created successfully
@@ -34,9 +38,9 @@ const prisma = new PrismaClient();
 
 export const createOrder = async (req: Request, res: Response) => {
   const userId = (req as any).user?.id;
-  const { productId, quantity,  address, phone } = req.body;
+  const { productId, quantity, address, phone, colorId, sizeId } = req.body;
 
-  if (!productId || !quantity  || !address || !phone) {
+  if (!productId || !quantity || !address || !phone || !colorId || !sizeId) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
@@ -44,6 +48,16 @@ export const createOrder = async (req: Request, res: Response) => {
     // Check if product exists and has enough stock
     const product = await prisma.product.findUnique({
       where: { id: productId },
+      include: {
+        colors: {
+          where: { colorId },
+          select: { color: true }
+        },
+        sizes: {
+          where: { sizeId },
+          select: { size: true }
+        }
+      }
     });
 
     if (!product) {
@@ -53,7 +67,19 @@ export const createOrder = async (req: Request, res: Response) => {
     if (product.stock < quantity) {
       return res.status(400).json({ error: 'Insufficient stock' });
     }
+
+    // Check if the selected color is available for this product
+    if (product.colors.length === 0) {
+      return res.status(400).json({ error: 'Selected color is not available for this product' });
+    }
+
+    // Check if the selected size is available for this product
+    if (product.sizes.length === 0) {
+      return res.status(400).json({ error: 'Selected size is not available for this product' });
+    }
+
     const total = product.price * quantity;
+
     // Use a transaction to ensure both operations succeed/fail together
     const [order, updatedProduct] = await prisma.$transaction([
       prisma.order.create({
@@ -64,7 +90,14 @@ export const createOrder = async (req: Request, res: Response) => {
           total,
           address,
           phone,
+          colorId,
+          sizeId
         },
+        include: {
+          product: true,
+          color: true,
+          size: true
+        }
       }),
       prisma.product.update({
         where: { id: productId },
@@ -119,6 +152,8 @@ export const getOrders = async (req: Request, res: Response) => {
         product: {
           include: {
             images: true, // optional: include images if you want
+            colors: true,
+            sizes: true
           },
         },
       },

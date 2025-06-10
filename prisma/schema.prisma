@@ -61,12 +61,14 @@ model Color {
   name     String
   hex      String
   products ProductColor[]
+  orders   Order[]
 }
 
 model Size {
   id       Int           @id @default(autoincrement())
   label    String
   products ProductSize[]
+  orders   Order[]
 }
 
 model ProductColor {
@@ -101,7 +103,10 @@ model Order {
   updatedAt DateTime @updatedAt
   address   String
   phone     String
-
+  colorId   Int
+  color     Color   @relation(fields: [colorId], references: [id])
+  sizeId    Int
+  size      Size    @relation(fields: [sizeId], references: [id])
 }
 
 enum status {
