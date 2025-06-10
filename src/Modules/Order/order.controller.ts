@@ -151,11 +151,13 @@ export const getOrders = async (req: Request, res: Response) => {
         user: true,
         product: {
           include: {
-            images: true, // optional: include images if you want
+            images: true,
             colors: true,
-            sizes: true
+            sizes: true,
           },
         },
+        color: true, // include selected color details
+        size: true,  // include selected size details
       },
       orderBy: {
         createdAt: 'desc',
@@ -168,6 +170,7 @@ export const getOrders = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Something went wrong while fetching orders." });
   }
 };
+
 
 /**
  * @swagger
