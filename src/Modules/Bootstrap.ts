@@ -7,6 +7,7 @@ import sizesRouter from './Products/Product-Sizes/product-size.routes'
 import productRouter from './Products/product.routes';
 import orderRouter from './Order/order.routes';
 import  cartRouter  from './cart/cart.routes';
+import governmentRouter from './government/government.routes';
 export const Bootstrap = (app: Express): void => {
     app.use('/api/auth', authRouter);
     app.use('/api/users', userRouter);
@@ -16,4 +17,5 @@ export const Bootstrap = (app: Express): void => {
     app.use('/api/products', productRouter);
     app.use('/api/orders', orderRouter);
     app.use('/api/cart', cartRouter);
+    app.use('/api/governments', governmentRouter);
 }
