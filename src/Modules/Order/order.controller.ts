@@ -24,6 +24,8 @@ const prisma = new PrismaClient();
  *                 type: string
  *               phone:
  *                 type: string
+ *               governmentId:
+ *                 type: string
  *     responses:
  *       201:
  *         description: Order created successfully
@@ -173,10 +175,10 @@ const prisma = new PrismaClient();
 
 export const createOrder = async (req: Request, res: Response) => {
   const userId = (req as any).user?.id;
-  const { address, phone } = req.body;
+  const { address, phone, governmentId } = req.body;
 
-  if (!address || !phone) {
-    return res.status(400).json({ error: "Address and phone are required" });
+  if (!address || !phone || !governmentId) {
+    return res.status(400).json({ error: "Address, phone, and government ID are required" });
   }
 
   try {
@@ -198,6 +200,7 @@ export const createOrder = async (req: Request, res: Response) => {
           total,
           address,
           phone,
+          governmentId,
           items: {
             create: cartItems.map((item) => ({
               productId: item.productId,
