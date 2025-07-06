@@ -1,127 +1,43 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { sendEmail } from '../../Config/mailService';
 
 const prisma = new PrismaClient();
 /**
  * @swagger
  * /api/orders:
  *   post:
- *     summary: Create a new order
+ *     summary: Create an order from user's cart items
  *     tags:
  *       - Orders
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required: [productId, quantity, total, address, phone, colorId, sizeId]
+ *             required: [address, phone]
  *             properties:
- *               productId:
- *                 type: integer
- *               quantity:
- *                 type: integer
  *               address:
  *                 type: string
  *               phone:
  *                 type: string
- *               colorId:
- *                 type: integer
- *               sizeId:
- *                 type: integer
  *     responses:
  *       201:
  *         description: Order created successfully
  *       400:
- *         description: Invalid input or creation failed
+ *         description: Cart is empty or invalid input
+ *       500:
+ *         description: Server error during order creation
  */
-
-export const createOrder = async (req: Request, res: Response) => {
-  const userId = (req as any).user?.id;
-  const { productId, quantity, address, phone, colorId, sizeId } = req.body;
-
-  if (!productId || !quantity || !address || !phone || !colorId || !sizeId) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
-
-  try {
-    // Check if product exists and has enough stock
-    const product = await prisma.product.findUnique({
-      where: { id: productId },
-      include: {
-        colors: {
-          where: { colorId },
-          select: { color: true }
-        },
-        sizes: {
-          where: { sizeId },
-          select: { size: true }
-        }
-      }
-    });
-
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-
-    if (product.stock < quantity) {
-      return res.status(400).json({ error: 'Insufficient stock' });
-    }
-
-    // Check if the selected color is available for this product
-    if (product.colors.length === 0) {
-      return res.status(400).json({ error: 'Selected color is not available for this product' });
-    }
-
-    // Check if the selected size is available for this product
-    if (product.sizes.length === 0) {
-      return res.status(400).json({ error: 'Selected size is not available for this product' });
-    }
-
-    const total = product.price * quantity;
-
-    // Use a transaction to ensure both operations succeed/fail together
-    const [order, updatedProduct] = await prisma.$transaction([
-      prisma.order.create({
-        data: {
-          userId,
-          productId,
-          quantity,
-          total,
-          address,
-          phone,
-          colorId,
-          sizeId
-        },
-        include: {
-          product: true,
-          color: true,
-          size: true
-        }
-      }),
-      prisma.product.update({
-        where: { id: productId },
-        data: {
-          stock: {
-            decrement: quantity,
-          },
-        },
-      }),
-    ]);
-
-    res.status(201).json(order);
-  } catch (error) {
-    console.error('Order creation error:', error);
-    res.status(400).json({ error: 'Failed to create order' });
-  }
-};
-
 
 /**
  * @swagger
  * /api/orders:
  *   get:
- *     summary: Get all orders with filters
+ *     summary: Get all orders (optionally filter by userId)
  *     tags:
  *       - Orders
  *     parameters:
@@ -129,155 +45,31 @@ export const createOrder = async (req: Request, res: Response) => {
  *         name: userId
  *         schema:
  *           type: integer
- *       - in: query
- *         name: productId
- *         schema:
- *           type: integer
  *     responses:
  *       200:
- *         description: A list of orders
+ *         description: A list of orders with their items
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       500:
+ *         description: Failed to fetch orders
  */
-
-export const getOrders = async (req: Request, res: Response) => {
-  const { productId, userId } = req.query;
-
-  try {
-    const orders = await prisma.order.findMany({
-      where: {
-        ...(productId && { productId: Number(productId) }),
-        ...(userId && { userId: Number(userId) }),
-      },
-      include: {
-        user: true,
-        product: {
-          include: {
-            images: true,
-            colors: true,
-            sizes: true,
-          },
-        },
-        color: true, // include selected color details
-        size: true,  // include selected size details
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-
-    res.status(200).json(orders);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Something went wrong while fetching orders." });
-  }
-};
-
-
-/**
- * @swagger
- * /api/orders/{id}:
- *   put:
- *     summary: Update an order status
- *     tags:
- *       - Orders 
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               status:
- *                 type: string
- *                 enum: [PENDING, DELIVERED, CANCELED]
- *     responses:
- *       200:
- *         description: Order updated
- */
-
-export const updateOrder = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const { status } = req.body;
-
-    try {
-        const updatedOrder = await prisma.order.update({
-            where: { id: Number(id) },
-            data: { status },
-        });
-
-        res.status(200).json(updatedOrder);
-    } catch (error) {
-        res.status(400).json({ error: error || 'Something went wrong' });
-    }
-};
-
-/**
- * @swagger
- * /api/orders/{id}:
- *   delete:
- *     summary: Delete an order
- *     tags:
- *       - Orders
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       204:
- *         description: Order deleted successfully
- *       403:
- *         description: Forbidden - Not allowed to delete this order
- *       404:
- *         description: Order not found
- */
-export const deleteOrder = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const user = (req as any).user;
-
-    try {
-        const order = await prisma.order.findUnique({
-            where: { id: Number(id) },
-        });
-
-        if (!order) {
-            return res.status(404).json({ error: "Order not found" });
-        }
-
-        if (user.role !== "ADMIN" && order.userId !== user.id) {
-            return res.status(403).json({ error: "You are not allowed to delete this order" });
-        }
-
-        await prisma.order.delete({
-            where: { id: Number(id) },
-        });
-
-        return res.status(201).json({
-            message: "Order deleted successfully",
-        });
-    } catch (error) {
-        return res.status(400).json({ error: error instanceof Error ? error.message : "Something went wrong" });
-    }
-};
 
 /**
  * @swagger
  * /api/orders/me:
  *   get:
- *     summary: Get orders for the currently authenticated user
+ *     summary: Get orders for the authenticated user
  *     tags:
  *       - Orders
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: List of user's orders
+ *         description: List of user's orders with nested items
  *         content:
  *           application/json:
  *             schema:
@@ -287,42 +79,290 @@ export const deleteOrder = async (req: Request, res: Response) => {
  *                 properties:
  *                   id:
  *                     type: integer
- *                   productId:
- *                     type: integer
- *                   userId:
- *                     type: integer
+ *                   total:
+ *                     type: number
  *                   status:
  *                     type: string
  *                     enum: [PENDING, DELIVERED, CANCELED]
- *                   product:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: integer
- *                       name:
- *                         type: string
- *                       price:
- *                         type: number
- *                         format: float
- *                       cover_Image:
- *                         type: string
+ *                   address:
+ *                     type: string
+ *                   phone:
+ *                     type: string
+ *                   items:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         productId:
+ *                           type: integer
+ *                         colorId:
+ *                           type: integer
+ *                         sizeId:
+ *                           type: integer
+ *                         quantity:
+ *                           type: integer
  *       401:
- *         description: Unauthorized - Missing or invalid token
+ *         description: Unauthorized
  *       500:
  *         description: Internal server error
  */
 
-export const getUsersOrder = async (req: Request, res: Response) => {
-    const userId = (req as any).user?.id;
-    try {
-        const orders = await prisma.order.findMany({
-            where: { userId: Number(userId) },
-            include: {
-                product: true,
-            },
-        });
-        res.status(200).json(orders);
-    } catch (error) {
-        res.status(500).json({ error: error });
+/**
+ * @swagger
+ * /api/orders/{id}:
+ *   put:
+ *     summary: Update the status of an order
+ *     tags:
+ *       - Orders
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [PENDING, DELIVERED, CANCELED]
+ *     responses:
+ *       200:
+ *         description: Order updated successfully
+ *       400:
+ *         description: Failed to update order
+ */
+
+/**
+ * @swagger
+ * /api/orders/{id}:
+ *   delete:
+ *     summary: Delete an order by ID
+ *     tags:
+ *       - Orders
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       201:
+ *         description: Order deleted successfully
+ *       403:
+ *         description: Forbidden – Not allowed
+ *       404:
+ *         description: Order not found
+ *       400:
+ *         description: Bad request or server error
+ */
+
+
+
+
+
+
+export const createOrder = async (req: Request, res: Response) => {
+  const userId = (req as any).user?.id;
+  const { address, phone } = req.body;
+
+  if (!address || !phone) {
+    return res.status(400).json({ error: "Address and phone are required" });
+  }
+
+  try {
+    const cartItems = await prisma.cartItem.findMany({
+      where: { userId },
+      include: { product: true, color: true, size: true },
+    });
+
+    if (cartItems.length === 0) {
+      return res.status(400).json({ error: "Cart is empty" });
     }
-}
+
+    const total = cartItems.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+
+    const order = await prisma.$transaction(async (tx) => {
+      const newOrder = await tx.order.create({
+        data: {
+          userId,
+          total,
+          address,
+          phone,
+          items: {
+            create: cartItems.map((item) => ({
+              productId: item.productId,
+              colorId: item.colorId,
+              sizeId: item.sizeId,
+              quantity: item.quantity,
+            })),
+          },
+        },
+        include: {
+          items: {
+            include: {
+              product: true,
+              color: true,
+              size: true,
+            },
+          },
+        },
+      });
+
+      await Promise.all(
+        cartItems.map((item) =>
+          tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { decrement: item.quantity } },
+          })
+        )
+      );
+
+      await tx.cartItem.deleteMany({ where: { userId } });
+
+      return newOrder;
+    });
+
+    // Send email after successful order creation
+    const productListHtml = cartItems
+      .map(
+        (item) =>
+          `<li><strong>${item.product.name}</strong> - Qty: ${item.quantity}, Color: ${item.color?.name}, Size: ${item.size?.label ?? "N/A"}</li>`
+      )
+      .join("");
+    const emailHtml = `
+  <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+    <h2 style="color: #b88c2c;">🛍️ New Order Notification</h2>
+    <p><strong>User ID:</strong> ${userId}</p>
+    <p><strong>Phone:</strong> ${phone}</p>
+    <p><strong>Address:</strong> ${address}</p>
+    <p><strong>Total:</strong> <span style="color: #b88c2c;">EGP ${total.toFixed(2)}</span></p>
+    <h3 style="margin-top: 20px;">🧾 Order Items:</h3>
+    <ul>
+      ${cartItems.map(
+      (item) => `
+        <li>
+          <strong>${item.product.name}</strong> —
+          Qty: ${item.quantity},
+          Color: ${item.color?.name},
+          Size: ${item.size?.label ?? "N/A"}
+        </li>`
+    ).join("")}
+    </ul>
+    <p>View it now <a href="https://dashboard.ryo-egypt.com/orders">here</a></p>
+  </div>
+`;
+
+
+    await sendEmail('elfarm879@gmail.com', 'New Order Created 🧾', emailHtml);
+
+    res.status(201).json(order);
+  } catch (err) {
+    console.error("Order creation error:", err);
+    res.status(500).json({ error: "Failed to create order" });
+  }
+};
+
+export const updateOrder = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    const updatedOrder = await prisma.order.update({
+      where: { id: Number(id) },
+      data: { status },
+    });
+
+    res.status(200).json(updatedOrder);
+  } catch (error) {
+    res.status(400).json({ error: error || 'Something went wrong' });
+  }
+};
+export const deleteOrder = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const user = (req as any).user;
+
+  try {
+    const order = await prisma.order.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    if (user.role !== "ADMIN" && order.userId !== user.id) {
+      return res.status(403).json({ error: "You are not allowed to delete this order" });
+    }
+
+    await prisma.order.delete({
+      where: { id: Number(id) },
+    });
+
+    return res.status(201).json({
+      message: "Order deleted successfully",
+    });
+  } catch (error) {
+    return res.status(400).json({ error: error instanceof Error ? error.message : "Something went wrong" });
+  }
+};
+
+export const getOrders = async (req: Request, res: Response) => {
+  const { userId } = req.query;
+
+  try {
+    const orders = await prisma.order.findMany({
+      where: {
+        ...(userId && { userId: Number(userId) }),
+      },
+      include: {
+        user: true,
+        items: {
+          include: {
+            product: { include: { images: true } },
+            color: true,
+            size: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    res.status(200).json(orders);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch orders" });
+  }
+};
+
+// Updated getUsersOrder
+export const getUsersOrder = async (req: Request, res: Response) => {
+  const userId = (req as any).user?.id;
+
+  try {
+    const orders = await prisma.order.findMany({
+      where: { userId },
+      include: {
+        items: {
+          include: {
+            product: { include: { images: true } },
+            color: true,
+            size: true,
+          },
+        },
+      },
+    });
+
+    res.status(200).json(orders);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch user's orders" });
+  }
+};
