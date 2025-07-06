@@ -17,13 +17,14 @@ const transporter = nodemailer.createTransport({
  * @param subject Email subject
  * @param html HTML content of the email
  */
-export const sendEmail = async (to: string, subject: string, html: string) => {
+export const sendEmail = async (to: string, subject: string, html: string, attachments?: any[]) => {
   try {
     const mailOptions = {
       from: `"Ryo" <${process.env.EMAIL_USER}>`,
       to,
       subject,
       html,
+      attachments,
     };
 
     const info = await transporter.sendMail(mailOptions);
@@ -34,3 +35,4 @@ export const sendEmail = async (to: string, subject: string, html: string) => {
     return false;
   }
 };
+
