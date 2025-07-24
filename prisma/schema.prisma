@@ -8,17 +8,17 @@ datasource db {
 }
 
 model User {
-  id              Int         @id @default(autoincrement())
-  email           String      @unique
+  id              Int        @id @default(autoincrement())
+  email           String     @unique
   password        String
   firstName       String
   lastName        String
-  role            Role        @default(USER)
-  phoneNumber     String?     @unique
+  role            Role       @default(USER)
+  phoneNumber     String?    @unique
   resetOtp        String?
   resetOtpExpires DateTime?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
   orders          Order[]
   cartItems       CartItem[]
 }
@@ -59,7 +59,7 @@ model Category {
 }
 
 model Color {
-  id         Int          @id @default(autoincrement())
+  id         Int            @id @default(autoincrement())
   name       String
   hex        String
   products   ProductColor[]
@@ -68,7 +68,7 @@ model Color {
 }
 
 model Size {
-  id         Int          @id @default(autoincrement())
+  id         Int           @id @default(autoincrement())
   label      String
   products   ProductSize[]
   cartItems  CartItem[]
@@ -109,30 +109,36 @@ model CartItem {
 }
 
 model Order {
-  id           Int          @id @default(autoincrement())
+  id           Int         @id @default(autoincrement())
   userId       Int
-  user         User         @relation(fields: [userId], references: [id])
+  user         User        @relation(fields: [userId], references: [id])
   items        OrderItem[]
-  status       status       @default(PENDING)
+  status       status      @default(PENDING)
   total        Float
   address      String
   phone        String
-  governmentId Int?         @default(1)
+  governmentId Int?        @default(1)
   government   Government? @relation(fields: [governmentId], references: [id])
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 }
 
+model Message {
+  id      Int    @id @default(autoincrement())
+  content String
+}
+
+
 model OrderItem {
-  id        Int      @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   orderId   Int
-  order     Order    @relation(fields: [orderId], references: [id])
+  order     Order   @relation(fields: [orderId], references: [id])
   productId Int
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
   colorId   Int?
-  color     Color?   @relation(fields: [colorId], references: [id])
+  color     Color?  @relation(fields: [colorId], references: [id])
   sizeId    Int?
-  size      Size?    @relation(fields: [sizeId], references: [id])
+  size      Size?   @relation(fields: [sizeId], references: [id])
   quantity  Int
 }
 
