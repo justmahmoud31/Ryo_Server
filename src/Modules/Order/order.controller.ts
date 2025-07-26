@@ -1,6 +1,6 @@
-import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-import { sendEmail } from '../../Config/mailService';
+import { Request, Response } from "express";
+import { PrismaClient } from "@prisma/client";
+import { sendEmail } from "../../Config/mailService";
 
 const prisma = new PrismaClient();
 /**
@@ -83,7 +83,6 @@ const prisma = new PrismaClient();
  *       500:
  *         description: Failed to fetch orders
  */
-
 
 /**
  * @swagger
@@ -171,7 +170,7 @@ const prisma = new PrismaClient();
  * @swagger
  * /api/orders/{id}:
  *   delete:
- *     summary: Delete an order by ID
+ *     summary: User deletes their own order by ID
  *     tags:
  *       - Orders
  *     security:
@@ -183,10 +182,35 @@ const prisma = new PrismaClient();
  *         schema:
  *           type: integer
  *     responses:
- *       201:
+ *       200:
  *         description: Order deleted successfully
  *       403:
- *         description: Forbidden – Not allowed
+ *         description: Forbidden – User not allowed to delete this order
+ *       404:
+ *         description: Order not found
+ *       400:
+ *         description: Bad request or server error
+ */
+/**
+ * @swagger
+ * /api/orders/admin/{id}:
+ *   delete:
+ *     summary: Admin deletes any order by ID
+ *     tags:
+ *       - Admin Orders
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Order deleted successfully by admin
+ *       403:
+ *         description: Forbidden – Admin access only
  *       404:
  *         description: Order not found
  *       400:
@@ -198,7 +222,9 @@ export const createOrder = async (req: Request, res: Response) => {
   const { address, phone, governmentId } = req.body;
 
   if (!address || !phone || !governmentId) {
-    return res.status(400).json({ error: "Address, phone, and government ID are required" });
+    return res
+      .status(400)
+      .json({ error: "Address, phone, and government ID are required" });
   }
 
   try {
@@ -211,7 +237,10 @@ export const createOrder = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Cart is empty" });
     }
 
-    const total = cartItems.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+    const total = cartItems.reduce(
+      (acc, item) => acc + item.product.price * item.quantity,
+      0
+    );
 
     const order = await prisma.$transaction(async (tx) => {
       const newOrder = await tx.order.create({
@@ -262,24 +291,28 @@ export const createOrder = async (req: Request, res: Response) => {
         <p><strong>User ID:</strong> ${userId}</p>
         <p><strong>Phone:</strong> ${phone}</p>
         <p><strong>Address:</strong> ${address}</p>
-        <p><strong>Total:</strong> <span style="color: #b88c2c;">EGP ${total.toFixed(2)}</span></p>
+        <p><strong>Total:</strong> <span style="color: #b88c2c;">EGP ${total.toFixed(
+      2
+    )}</span></p>
         <h3 style="margin-top: 20px;">🧾 Order Items:</h3>
         <ul>
-          ${cartItems.map(
-            (item) => `
+          ${cartItems
+        .map(
+          (item) => `
               <li>
                 <strong>${item.product.name}</strong> —
                 Qty: ${item.quantity},
                 Color: ${item.color?.name},
                 Size: ${item.size?.label ?? "N/A"}
               </li>`
-          ).join("")}
+        )
+        .join("")}
         </ul>
         <p>View it now <a href="https://dashboard.ryo-egypt.com/orders">here</a></p>
       </div>
     `;
 
-    await sendEmail("elfarm879@gmail.com", "New Order Created 🧾", emailHtml);
+    await sendEmail("ryo.eg10@gmail.com", "New Order Created 🧾", emailHtml);
 
     // 🆕 Fetch message from database
     const message = await prisma.message.findFirst(); // or use findUnique({ where: { id: 1 } }) if needed
@@ -294,7 +327,6 @@ export const createOrder = async (req: Request, res: Response) => {
   }
 };
 
-
 export const updateOrder = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -307,12 +339,50 @@ export const updateOrder = async (req: Request, res: Response) => {
 
     res.status(200).json(updatedOrder);
   } catch (error) {
-    res.status(400).json({ error: error || 'Something went wrong' });
+    res.status(400).json({ error: error || "Something went wrong" });
   }
 };
 
+export const deleteAdminOrder = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const user = (req as any).user;
+  console.log(id);
 
-export const deleteOrder = async (req: Request, res: Response) => {
+  if (user.role !== "ADMIN") {
+    return res.status(403).json({ error: "Access denied" });
+  }
+
+  try {
+    const order = await prisma.order.findUnique({
+      where: { id: Number(id) },
+    });
+    console.log("Order", order);
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    // Delete related items first
+    await prisma.orderItem.deleteMany({
+      where: { orderId: Number(id) },
+    });
+
+    // Then delete the order
+    await prisma.order.delete({
+      where: { id: Number(id) },
+    });
+
+    return res.status(200).json({
+      message: "Order deleted successfully by admin",
+    });
+  } catch (error) {
+    return res.status(400).json({
+      error: error instanceof Error ? error.message : "Something went wrong",
+    });
+  }
+};
+
+export const deleteUserOrder = async (req: Request, res: Response) => {
   const { id } = req.params;
   const user = (req as any).user;
 
@@ -325,17 +395,24 @@ export const deleteOrder = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Order not found" });
     }
 
-    if (user.role !== "ADMIN" && order.userId !== user.id) {
-      return res
-        .status(403)
-        .json({ error: "You are not allowed to delete this order" });
+    if (order.userId !== user.id) {
+      return res.status(403).json({
+        error: "You are not authorized to delete this order",
+      });
     }
 
+    // Delete related items first
+    await prisma.orderItem.deleteMany({
+      where: { orderId: Number(id) },
+    });
+
+    // Then delete the order
     await prisma.order.delete({
       where: { id: Number(id) },
     });
 
-    return res.status(201).json({
+
+    return res.status(200).json({
       message: "Order deleted successfully",
     });
   } catch (error) {
@@ -344,7 +421,6 @@ export const deleteOrder = async (req: Request, res: Response) => {
     });
   }
 };
-
 
 export const getOrders = async (req: Request, res: Response) => {
   const { userId, status, governmentId, dateFrom, dateTo } = req.query;
@@ -357,11 +433,11 @@ export const getOrders = async (req: Request, res: Response) => {
         ...(governmentId && { governmentId: Number(governmentId) }),
         ...(dateFrom || dateTo
           ? {
-              createdAt: {
-                ...(dateFrom && { gte: new Date(dateFrom as string) }),
-                ...(dateTo && { lte: new Date(dateTo as string) }),
-              },
-            }
+            createdAt: {
+              ...(dateFrom && { gte: new Date(dateFrom as string) }),
+              ...(dateTo && { lte: new Date(dateTo as string) }),
+            },
+          }
           : {}),
       },
       include: {
@@ -377,12 +453,14 @@ export const getOrders = async (req: Request, res: Response) => {
       orderBy: { createdAt: "desc" },
     });
 
-    res.status(200).json(orders);
+    res.status(200).json({
+      message: "Orders retrived Succefully",
+      orders,
+    });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch orders" });
   }
 };
-
 
 // Updated getUsersOrder
 export const getUsersOrder = async (req: Request, res: Response) => {
