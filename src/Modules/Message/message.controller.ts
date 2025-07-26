@@ -5,22 +5,28 @@ const prisma = new PrismaClient();
 
 export const getMessages = async (req: Request, res: Response) => {
   try {
-    const messages = await prisma.message.findMany();
+    const messages = await prisma.message.findMany({
+      include: {
+        product: true, // populate related product
+      },
+    });
+
     res.status(200).json(messages);
-  } catch {
+  } catch (error) {
     res.status(500).json({ error: "Failed to fetch messages" });
   }
 };
 
+
 export const createMessage = async (req: Request, res: Response) => {
-  const { content } = req.body;
+  const { content ,productId} = req.body;
 
   if (!content || typeof content !== "string") {
     return res.status(400).json({ error: "Content is required" });
   }
 
   try {
-    const message = await prisma.message.create({ data: { content } });
+    const message = await prisma.message.create({ data: { content,productId } });
     res.status(201).json(message);
   } catch {
     res.status(500).json({ error: "Failed to create message" });

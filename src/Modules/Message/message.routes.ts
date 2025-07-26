@@ -33,13 +33,14 @@ const router = Router();
  *                     type: string
  */
 router.get("/", getMessages);
-
 /**
  * @swagger
  * /api/messages:
  *   post:
  *     summary: Create a new message
  *     tags: [Messages]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -52,12 +53,17 @@ router.get("/", getMessages);
  *               content:
  *                 type: string
  *                 example: Hello, world!
+ *               productId:
+ *                 type: integer
+ *                 nullable: true
+ *                 example: 5
  *     responses:
  *       201:
  *         description: Message created
  *       400:
  *         description: Validation error
  */
+
 router.post("/", (req:Request,res:Response)=>{
     createMessage(req,res);
 });
