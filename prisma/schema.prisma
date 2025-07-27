@@ -43,6 +43,8 @@ model Product {
   cartItems     CartItem[]
   isDeleted     Boolean        @default(false)
   Message       Message[]
+
+  Offer Offer[]
 }
 
 model ProductImage {
@@ -129,6 +131,22 @@ model Message {
   content   String
   productId Int?
   product   Product? @relation(fields: [productId], references: [id])
+  offer     Offer?   @relation
+}
+
+model Offer {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String
+  discount    Float      // e.g., 0.2 for 20% off
+  productId   Int
+  product     Product    @relation(fields: [productId], references: [id])
+  messageId   Int? @unique
+  message     Message?   @relation(fields: [messageId], references: [id])
+  expiresAt   DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  orderItems  OrderItem[]
 }
 
 model OrderItem {
@@ -142,7 +160,10 @@ model OrderItem {
   sizeId    Int?
   size      Size?   @relation(fields: [sizeId], references: [id])
   quantity  Int
+  offerId   Int?
+  offer     Offer?  @relation(fields: [offerId], references: [id])
 }
+
 
 model Government {
   id     Int     @id @default(autoincrement())

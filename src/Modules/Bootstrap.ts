@@ -9,6 +9,7 @@ import orderRouter from './Order/order.routes';
 import  cartRouter  from './cart/cart.routes';
 import governmentRouter from './government/government.routes';
 import messageRouter from './Message/message.routes';
+import offerRouter from './Offer/offer.routes'
 export const Bootstrap = (app: Express): void => {
     app.use('/api/auth', authRouter);
     app.use('/api/users', userRouter);
@@ -20,4 +21,5 @@ export const Bootstrap = (app: Express): void => {
     app.use('/api/cart', cartRouter);
     app.use('/api/governments', governmentRouter);
     app.use('/api/messages',messageRouter);
+    app.use('/api/offers',offerRouter);
 }
