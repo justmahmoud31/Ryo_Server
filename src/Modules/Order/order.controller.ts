@@ -221,7 +221,7 @@ const prisma = new PrismaClient();
 
 export const createOrder = async (req: Request, res: Response) => {
   const userId = (req as any).user?.id;
-  const { address, phone, governmentId, offerId } = req.body;
+  const { address, phone, governmentId } = req.body;
 
   if (!address || !phone || !governmentId) {
     return res
@@ -232,7 +232,7 @@ export const createOrder = async (req: Request, res: Response) => {
   try {
     const cartItems = await prisma.cartItem.findMany({
       where: { userId },
-      include: { product: true, color: true, size: true },
+      include: { product: true, color: true, size: true, offer: true },
     });
 
     if (cartItems.length === 0) {
@@ -258,7 +258,7 @@ export const createOrder = async (req: Request, res: Response) => {
               colorId: item.colorId,
               sizeId: item.sizeId,
               quantity: item.quantity,
-              offerId,
+              offerId: item.offerId ?? null,
             })),
           },
         },
@@ -268,6 +268,7 @@ export const createOrder = async (req: Request, res: Response) => {
               product: true,
               color: true,
               size: true,
+              offer: true
             },
           },
         },
@@ -295,21 +296,21 @@ export const createOrder = async (req: Request, res: Response) => {
         <p><strong>Phone:</strong> ${phone}</p>
         <p><strong>Address:</strong> ${address}</p>
         <p><strong>Total:</strong> <span style="color: #b88c2c;">EGP ${total.toFixed(
-          2
-        )}</span></p>
+      2
+    )}</span></p>
         <h3 style="margin-top: 20px;">🧾 Order Items:</h3>
         <ul>
           ${cartItems
-            .map(
-              (item) => `
+        .map(
+          (item) => `
               <li>
                 <strong>${item.product.name}</strong> —
                 Qty: ${item.quantity},
                 Color: ${item.color?.name},
                 Size: ${item.size?.label ?? "N/A"}
               </li>`
-            )
-            .join("")}
+        )
+        .join("")}
         </ul>
         <p>View it now <a href="https://dashboard.ryo-egypt.com/orders">here</a></p>
       </div>
@@ -435,11 +436,11 @@ export const getOrders = async (req: Request, res: Response) => {
         ...(governmentId && { governmentId: Number(governmentId) }),
         ...(dateFrom || dateTo
           ? {
-              createdAt: {
-                ...(dateFrom && { gte: new Date(dateFrom as string) }),
-                ...(dateTo && { lte: new Date(dateTo as string) }),
-              },
-            }
+            createdAt: {
+              ...(dateFrom && { gte: new Date(dateFrom as string) }),
+              ...(dateTo && { lte: new Date(dateTo as string) }),
+            },
+          }
           : {}),
       },
       include: {
@@ -449,7 +450,7 @@ export const getOrders = async (req: Request, res: Response) => {
             product: { include: { images: true } },
             color: true,
             size: true,
-            offer : true
+            offer: true,
           },
         },
       },

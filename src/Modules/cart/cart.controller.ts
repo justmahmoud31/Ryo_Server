@@ -30,6 +30,8 @@ const prisma = new PrismaClient();
  *                 type: integer
  *               sizeId:
  *                 type: integer
+ *               offerId:
+ *                 type: integer
  *     responses:
  *       201:
  *         description: Item added or quantity updated
@@ -40,7 +42,7 @@ const prisma = new PrismaClient();
  */
 export const addToCart = async (req: Request, res: Response) => {
   const userId = (req as any).user?.id;
-  const { productId, quantity, colorId, sizeId } = req.body;
+  const { productId, quantity, colorId, sizeId,offerId } = req.body;
 
   if (!productId || !quantity || !colorId) {
     return res.status(400).json({ error: "Missing required fields" });
@@ -56,6 +58,7 @@ export const addToCart = async (req: Request, res: Response) => {
         productId,
         colorId,
         sizeId,
+        offerId,
       },
     });
 
@@ -75,6 +78,7 @@ export const addToCart = async (req: Request, res: Response) => {
           quantity,
           colorId,
           sizeId,
+          offerId
         },
       });
     }
@@ -124,6 +128,7 @@ export const getCart = async (req: Request, res: Response) => {
         },
         color: true,
         size: true,
+        offer: true, // Include offer details if applicable
       },
     });
     res.status(200).json({

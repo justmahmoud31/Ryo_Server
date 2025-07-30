@@ -107,6 +107,8 @@ model CartItem {
   sizeId    Int?
   size      Size?    @relation(fields: [sizeId], references: [id])
   quantity  Int      @default(1)
+  offerId   Int?
+  offer     Offer?   @relation(fields: [offerId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -127,7 +129,7 @@ model Order {
 }
 
 model Message {
-  id        Int     @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   content   String
   productId Int?
   product   Product? @relation(fields: [productId], references: [id])
@@ -135,18 +137,19 @@ model Message {
 }
 
 model Offer {
-  id          Int       @id @default(autoincrement())
+  id          Int         @id @default(autoincrement())
   title       String
   description String
-  discount    Float      // e.g., 0.2 for 20% off
+  discount    Float // e.g., 0.2 for 20% off
   productId   Int
-  product     Product    @relation(fields: [productId], references: [id])
-  messageId   Int? @unique
-  message     Message?   @relation(fields: [messageId], references: [id])
+  product     Product     @relation(fields: [productId], references: [id])
+  messageId   Int?        @unique
+  message     Message?    @relation(fields: [messageId], references: [id])
   expiresAt   DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  cartItems   CartItem[]
+  OrderItem   OrderItem[]
 }
 
 model OrderItem {
@@ -163,7 +166,6 @@ model OrderItem {
   offerId   Int?
   offer     Offer?  @relation(fields: [offerId], references: [id])
 }
-
 
 model Government {
   id     Int     @id @default(autoincrement())
