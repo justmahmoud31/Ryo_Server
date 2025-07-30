@@ -43,12 +43,19 @@ export const getAllOffers = async (req: Request, res: Response) => {
 
     const offers = await prisma.offer.findMany({
       where: filters,
-      include: { product: true, message: true },
+      include: {
+        product: {
+          include: {
+            sizes: true,
+            colors: true
+          }
+        }, message: true
+      },
     });
 
     res.status(200).json({
-        "Message" : "Offers Retrived Succefully",
-        offers
+      "Message": "Offers Retrived Succefully",
+      offers
     });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch offers", details: error });
